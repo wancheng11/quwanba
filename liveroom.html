@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>直播间</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 直播视频区域 */
+        .live-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: #000;
+        }
+
+        .live-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 顶部信息栏 */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+            z-index: 100;
+        }
+
+        .back-btn {
+            color: #fff;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .anchor-info {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .anchor-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            margin-right: 10px;
+            border: 2px solid #fff;
+        }
+
+        .anchor-details {
+            flex: 1;
+        }
+
+        .anchor-name {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .viewers-count {
+            font-size: 12px;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .follow-btn {
+            background: rgba(255, 107, 107, 0.8);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 15px;
+            color: white;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 底部互动区域 */
+        .bottom-area {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);
+        }
+
+        /* 评论列表 */
+        .comments-container {
+            position: absolute;
+            bottom: 70px;
+            left: 0;
+            right: 0;
+            max-height: 50vh;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .comment-item {
+            background: rgba(0,0,0,0.3);
+            padding: 8px 12px;
+            border-radius: 20px;
+            max-width: 80%;
+            backdrop-filter: blur(5px);
+        }
+
+        .comment-user {
+            color: #4D94FF;
+            font-weight: 500;
+            margin-right: 5px;
+        }
+
+        .comment-text {
+            color: #fff;
+        }
+
+        /* 底部输入栏 */
+        .input-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+            border-radius: 25px;
+        }
+
+        .comment-input {
+            flex: 1;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .comment-input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .action-btn .material-icons {
+            font-size: 24px;
+        }
+
+        /* PK系统样式 */
+        .pk-container {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 120px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .pk-side {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pk-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            border: 2px solid #fff;
+        }
+
+        .pk-info {
+            color: white;
+        }
+
+        .pk-name {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .pk-score {
+            font-size: 24px;
+            font-weight: 600;
+            color: #FFD700;
+        }
+
+        .pk-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .pk-bar-left, .pk-bar-right {
+            position: absolute;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .pk-bar-left {
+            left: 0;
+            background: #FF6B6B;
+        }
+
+        .pk-bar-right {
+            right: 0;
+            background: #4D94FF;
+        }
+
+        /* 观众列表样式 */
+        .viewer-list {
+            position: absolute;
+            top: 80px;
+            right: 10px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 20px;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .viewer-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px;
+            color: white;
+        }
+
+        .viewer-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 15px;
+        }
+
+        .viewer-name {
+            font-size: 12px;
+        }
+
+        /* 礼物特效样式 */
+        .gift-effect {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: giftFloat 3s ease-out;
+            pointer-events: none;
+        }
+
+        .gift-effect.luxury {
+            animation: luxuryGift 3s ease-out;
+        }
+
+        @keyframes giftFloat {
+            0% { transform: translate(-50%, 0); opacity: 0; }
+            10% { transform: translate(-50%, -50%); opacity: 1; }
+            90% { transform: translate(-50%, -200%); opacity: 1; }
+            100% { transform: translate(-50%, -250%); opacity: 0; }
+        }
+
+        @keyframes luxuryGift {
+            0% { transform: scale(0) rotate(0deg); opacity: 0; }
+            20% { transform: scale(1.2) rotate(360deg); opacity: 1; }
+            40% { transform: scale(1) rotate(360deg); opacity: 1; }
+            80% { transform: scale(1) rotate(360deg); opacity: 1; }
+            100% { transform: scale(0) rotate(720deg); opacity: 0; }
+        }
+
+        /* 直播统计面板 */
+        .stats-panel {
+            position: absolute;
+            top: 80px;
+            left: 10px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 20px;
+            padding: 10px;
+            color: white;
+            font-size: 12px;
+        }
+
+        .stats-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 5px 0;
+        }
+
+        .stats-icon {
+            color: #FFD700;
+        }
+    </style>
+</head>
+<body>
+    <div class="live-container">
+        <!-- 直播视频 -->
+        <video class="live-video" autoplay muted loop>
+            <source src="path_to_your_video.mp4" type="video/mp4">
+        </video>
+
+        <!-- 顶部信息栏 -->
+        <div class="top-bar">
+            <i class="material-icons back-btn" onclick="window.location.href='yulezhibo.html'">arrow_back</i>
+            <div class="anchor-info">
+                <img class="anchor-avatar" src="" alt="主播头像">
+                <div class="anchor-details">
+                    <div class="anchor-name"></div>
+                    <div class="viewers-count">
+                        <i class="material-icons">visibility</i>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+            <button class="follow-btn">
+                <i class="material-icons">add</i>
+                <span>关注</span>
+            </button>
+        </div>
+
+        <!-- 评论区 -->
+        <div class="comments-container" id="commentsContainer"></div>
+
+        <!-- 底部操作区 -->
+        <div class="bottom-area">
+            <div class="input-bar">
+                <input type="text" class="comment-input" placeholder="说点什么...">
+                <div class="action-buttons">
+                    <button class="action-btn">
+                        <i class="material-icons">card_giftcard</i>
+                        <span>礼物</span>
+                    </button>
+                    <button class="action-btn">
+                        <i class="material-icons">favorite</i>
+                        <span>点赞</span>
+                    </button>
+                    <button class="action-btn">
+                        <i class="material-icons">share</i>
+                        <span>分享</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PK系统 -->
+        <div class="pk-container" id="pkContainer">
+            <div class="pk-side">
+                <img class="pk-avatar" src="" alt="主播头像" id="hostAvatar">
+                <div class="pk-info">
+                    <div class="pk-name" id="hostName"></div>
+                    <div class="pk-score" id="hostScore">0</div>
+                </div>
+            </div>
+            <div class="pk-side">
+                <div class="pk-info">
+                    <div class="pk-name" id="challengerName"></div>
+                    <div class="pk-score" id="challengerScore">0</div>
+                </div>
+                <img class="pk-avatar" src="" alt="对手头像" id="challengerAvatar">
+            </div>
+            <div class="pk-progress">
+                <div class="pk-bar-left" id="pkBarLeft"></div>
+                <div class="pk-bar-right" id="pkBarRight"></div>
+            </div>
+        </div>
+
+        <!-- 观众列表 -->
+        <div class="viewer-list" id="viewerList"></div>
+
+        <!-- 直播统计 -->
+        <div class="stats-panel">
+            <div class="stats-item">
+                <i class="material-icons stats-icon">favorite</i>
+                <span id="likeCount">0</span>
+            </div>
+            <div class="stats-item">
+                <i class="material-icons stats-icon">card_giftcard</i>
+                <span id="giftCount">0</span>
+            </div>
+            <div class="stats-item">
+                <i class="material-icons stats-icon">people</i>
+                <span id="viewerCount">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟评论数据
+        const mockComments = [
+            { user: '小可爱', text: '主播好厉害！' },
+            { user: '快乐星球', text: '666666' },
+            { user: '阳光男孩', text: '主播玩得真好' },
+            { user: '甜心宝贝', text: '主播声音真好听' }
+        ];
+
+        // 检查是否是从正确页面进入
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取上一个页面的URL
+            const previousPage = document.referrer;
+            
+            // 如果不是从yulezhibo.html进入，则重定向到首页
+            if (!previousPage.includes('yulezhibo.html')) {
+                window.location.href = 'quwanxingqiu.html';
+                return;
+            }
+
+            // 获取主播信息
+            const anchorInfo = JSON.parse(localStorage.getItem('currentAnchor'));
+            if (!anchorInfo) {
+                // 如果没有主播信息，也重定向到首页
+                window.location.href = 'quwanxingqiu.html';
+                return;
+            }
+
+            // 正常初始化直播间...
+            initLiveRoom();
+        });
+
+        function initLiveRoom() {
+            // 获取主播信息
+            const anchorInfo = JSON.parse(localStorage.getItem('currentAnchor'));
+            if (anchorInfo) {
+                // 更新主播信息
+                document.querySelector('.anchor-name').textContent = anchorInfo.name;
+                document.querySelector('.anchor-avatar').src = anchorInfo.avatar;
+                document.querySelector('.viewers-count span').textContent = anchorInfo.viewers;
+            }
+
+            // 初始化评论区
+            initComments();
+
+            // 添加评论输入事件监听
+            const commentInput = document.querySelector('.comment-input');
+            if (commentInput) {
+                commentInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        const text = this.value.trim();
+                        if (text) {
+                            addComment('我', text);
+                            this.value = '';
+                        }
+                    }
+                });
+            }
+
+            // 添加礼物按钮事件
+            const giftBtn = document.querySelector('.action-btn:nth-child(1)');
+            if (giftBtn) {
+                giftBtn.addEventListener('click', showGiftPanel);
+            }
+
+            // 添加点赞按钮事件
+            const likeBtn = document.querySelector('.action-btn:nth-child(2)');
+            if (likeBtn) {
+                likeBtn.addEventListener('click', addLike);
+            }
+
+            // 添加分享按钮事件
+            const shareBtn = document.querySelector('.action-btn:nth-child(3)');
+            if (shareBtn) {
+                shareBtn.addEventListener('click', shareStream);
+            }
+
+            // 添加关注按钮事件
+            const followBtn = document.querySelector('.follow-btn');
+            if (followBtn) {
+                followBtn.addEventListener('click', toggleFollow);
+            }
+
+            // 模拟实时评论
+            setInterval(() => {
+                const randomComment = mockComments[Math.floor(Math.random() * mockComments.length)];
+                addComment(randomComment.user, randomComment.text);
+            }, 3000);
+        }
+
+        // 添加评论
+        function addComment(user, text) {
+            const container = document.getElementById('commentsContainer');
+            if (!container) return;
+
+            const comment = document.createElement('div');
+            comment.className = 'comment-item';
+            comment.innerHTML = `
+                <span class="comment-user">${user}:</span>
+                <span class="comment-text">${text}</span>
+            `;
+            container.appendChild(comment);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 显示礼物面板
+        function showGiftPanel() {
+            const panel = document.createElement('div');
+            panel.className = 'gift-panel';
+            panel.innerHTML = `
+                <div class="gift-header">
+                    <h3>送礼物</h3>
+                    <i class="material-icons" onclick="this.parentElement.parentElement.remove()">close</i>
+                </div>
+                <div class="gift-grid">
+                    <div class="gift-item" onclick="sendGift('小心心', 1)">
+                        <div class="gift-icon">❤️</div>
+                        <div class="gift-name">小心心</div>
+                        <div class="gift-price">1币</div>
+                    </div>
+                    <div class="gift-item" onclick="sendGift('小花花', 5)">
+                        <div class="gift-icon">🌸</div>
+                        <div class="gift-name">小花花</div>
+                        <div class="gift-price">5币</div>
+                    </div>
+                    <div class="gift-item" onclick="sendGift('小星星', 10)">
+                        <div class="gift-icon">⭐</div>
+                        <div class="gift-name">小星星</div>
+                        <div class="gift-price">10币</div>
+                    </div>
+                    <div class="gift-item" onclick="sendGift('皇冠', 100)">
+                        <div class="gift-icon">👑</div>
+                        <div class="gift-name">皇冠</div>
+                        <div class="gift-price">100币</div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(panel);
+        }
+
+        // 发送礼物
+        function sendGift(giftName, price) {
+            // 创建礼物动画
+            const giftAnim = document.createElement('div');
+            giftAnim.className = 'gift-animation';
+            giftAnim.innerHTML = `
+                <div class="gift-icon">${getGiftIcon(giftName)}</div>
+                <div class="gift-info">
+                    <span class="gift-sender">我</span>
+                    <span>送出了</span>
+                    <span class="gift-name">${giftName}</span>
+                </div>
+            `;
+
+            document.querySelector('.live-container').appendChild(giftAnim);
+            setTimeout(() => giftAnim.remove(), 3000);
+
+            // 添加评论提示
+            addComment('系统', `我送出了${giftName}`);
+        }
+
+        // 获取礼物图标
+        function getGiftIcon(giftName) {
+            const icons = {
+                '小心心': '❤️',
+                '小花花': '🌸',
+                '小星星': '⭐',
+                '皇冠': '👑'
+            };
+            return icons[giftName] || '🎁';
+        }
+
+        // 点赞功能
+        function addLike() {
+            const likeIcon = document.createElement('div');
+            likeIcon.className = 'like-icon';
+            likeIcon.innerHTML = '❤️';
+            likeIcon.style.cssText = `
+                position: absolute;
+                bottom: 100px;
+                right: ${50 + Math.random() * 50}px;
+                animation: likeFloat 2s ease-out;
+                font-size: 24px;
+            `;
+
+            document.querySelector('.live-container').appendChild(likeIcon);
+            setTimeout(() => likeIcon.remove(), 2000);
+        }
+
+        // 分享功能
+        function shareStream() {
+            alert('分享功能开发中...');
+        }
+
+        // 关注功能
+        function toggleFollow() {
+            const followBtn = document.querySelector('.follow-btn');
+            const isFollowed = followBtn.classList.contains('followed');
+            
+            if (isFollowed) {
+                followBtn.classList.remove('followed');
+                followBtn.innerHTML = '<i class="material-icons">add</i><span>关注</span>';
+                showMessage('已取消关注');
+            } else {
+                followBtn.classList.add('followed');
+                followBtn.innerHTML = '<i class="material-icons">done</i><span>已关注</span>';
+                showMessage('关注成功');
+            }
+        }
+
+        // 显示消息提示
+        function showMessage(text) {
+            const message = document.createElement('div');
+            message.className = 'message-tip';
+            message.textContent = text;
+            document.body.appendChild(message);
+            setTimeout(() => message.remove(), 2000);
+        }
+
+        // 返回按钮事件
+        document.querySelector('.back-btn').addEventListener('click', () => {
+            window.location.href = 'yulezhibo.html';
+        });
+    </script>
+</body>
+</html> 
